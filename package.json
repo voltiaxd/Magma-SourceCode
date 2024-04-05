@@ -1,0 +1,23 @@
+{
+  "name": "magma",
+  "version": "1.1.1",
+  "description": "Magma is an ElectronJS project, the latest version, designed by Samuele Radici. It originated thinking to Obsidian with the goal of implementing a graph-like visualization, but with SQL tables, and later evolved into supporting remote database connections.",
+  "main": "src/app.js",
+  "repository": "https://github.com/k-i-o/Magma-Updater",
+  "publish": {
+    "provider": "github",
+    "releaseType": "release",
+    "owner": "k-i-o",
+    "repo": "Magma-Updater"
+  },
+  "author": "Samuele Radici",
+  "license": "MIT",
+  "dependencies": {
+    "discord-rpc": "^4.0.1",
+    "electron-log": "^5.0.1",
+    "electron-updater": "^6.1.4",
+    "jquery": "^3.7.1",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.6.2"
+  }
+}

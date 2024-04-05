@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Magma</title>
+    <meta name="description" content="" />
+
+    <link rel="apple-touch-icon" sizes="57x57" href="assets/favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="assets/favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="assets/favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="assets/favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="assets/favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="assets/favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="style.css" />
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/hint/show-hint.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/sql/sql.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/hint/show-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/hint/sql-hint.js"></script> -->
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+    <style>
+      .node, .node-column {
+        fill: var(--c-primary);
+        stroke: var(--c-primary);
+        stroke-width: 2px;
+        filter: drop-shadow(0px 0px 5px var(--c-primary));
+      }
+
+      .link-column {
+        stroke:  var(--c-secondary);
+        stroke-width: 3px;
+      }
+
+      .link {
+        stroke:  var(--c-secondary);
+        stroke-width: 6px;
+      }
+
+      .node-label, .node-column-label {
+        text-anchor: middle;
+        font-size: 10px;
+        font-family: monospace;
+        fill: var(--c-text);
+        pointer-events: none;
+      }
+
+      svg#canvas { 
+        width: 100%;
+        height: 100%;
+      }
+
+      .fake-cursor {
+        background: var(--c-primary);
+        width: 2px !important;
+        animation: blink 1.5s infinite;
+      }
+
+      @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+      }
+
+      .result {
+        margin: 20px;
+        font-family: monospace;
+      }
+    </style>
+  </head>
+  <body>
+    <!--[if lt IE 7]>
+      <p class="browsehappy">
+        You are using an <strong>outdated</strong> browser. Please
+        <a href="#">upgrade your browser</a> to improve your experience.
+      </p>
+    <![endif]-->
+
+    <div class="title-bar">
+      
+      <div class="views">
+        <button onclick="setPage(document.querySelector('#empty-view'))" title="Empty view">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13.5H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+          </svg>          
+        </button>
+        <button id="editor" onclick="setPage(document.querySelector('#editor-view'))" title="Editor">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>          
+        </button>
+        <button id="graph" onclick="setPage(document.querySelector('#graph-view'))" title="Graph view">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="drag"></div>
+
+      <!-- <div class="title-container">
+        <div class="title-bg"></div>
+        <div class="title">Magma</div>
+      </div> -->
+
+      <div class="system">
+        <button id="themes" onclick="openThemes()" title="Open themes">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z" />
+          </svg>          
+        </button>
+        <button id="settings" onclick="openSettings()" title="Open settings">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>          
+        </button>
+      </div>
+
+      <div class="buttons">
+        <button id="minimize" onclick="eAPI.minimize()" title="Minimize the window">
+
+          <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-6 h-6"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19.5 12h-15"
+          />
+        </svg>
+        </button>
+        <button id="maximize" onclick="eAPI.maximize()" title="Maximize the window">
+            <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.5 8.25V6a2.25 2.25 0 00-2.25-2.25H6A2.25 2.25 0 003.75 6v8.25A2.25 2.25 0 006 16.5h2.25m8.25-8.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-7.5A2.25 2.25 0 018.25 18v-1.5m8.25-8.25h-6a2.25 2.25 0 00-2.25 2.25v6"
+            />
+          </svg>
+        </button>
+        <button id="close" onclick="eAPI.close()" title="CLOSE the application!!">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="body">
+
+      <div id="alert" class="hidden">
+        <div class="title">Alert!</div>
+        <div class="message"></div>
+      </div>
+
+      <div class="modal" id="themes-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Themes</h3>
+            <button id="close-modal" onclick="closeThemes()">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="buttons-themes">
+            <div class="tabs">
+              <div data-tab-target="#themes-list" class="active tab">Explore</div>
+              <div data-tab-target="#themes-config" class="tab">Create</div>
+            </div>
+            <div class="import-export">
+              <div class="btn" onclick="importTheme()">Import</div>
+              <div class="btn" onclick="exportTheme()">Export</div>
+            </div>
+          </div>
+          <div class="modal-body">
+            <div id="themes-list" data-tab-content class="active"></div>
+            <form id="themes-config" data-tab-content>
+
+              <div class="configs-container">
+
+              </div>
+
+              <button type="submit">Save</button>
+            </form>
+
+            <form id="themes-config-edit" data-tab-content>
+              <input style="display: none;" type="text" name="indexEdited" disabled>
+
+              <div class="configs-container"></div>
+
+              <button type="submit">Edit</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      
+      <div class="modal" id="settings-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Settings</h3>
+            <button id="close-modal" onclick="closeSettings()">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="settings-config">
+              <div class="input-wrapper">
+                <input name="mysql_bin_path" type="text" placeholder="MySql path (default: [C:\\xampp\\mysql\\bin\\mysqld.exe])">
+                <div class="form-group inline">
+                  <label for="run-mysql-at-startup">Run MySql at startup (experimental)</label>
+                  <label class="custom-checkbox" for="run-mysql-at-startup">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                  </label>
+                  <input name="run_mysql_at_startup" id="run-mysql-at-startup" type="checkbox">
+                </div>
+              </div>
+              <button type="submit">Save</button> 
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+          <div class="resizer" id="resizer-sidebar"></div>
+          <div id="pages">
+              <div id="options">
+
+                <button class="option single" onclick="clearConnections();" title="Close and remove ALL connections">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                  </svg>
+                </button>
+
+                <button class="option single" id="create-new-connection" onclick="openModal();" title="Connect a new database">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>                  
+
+              </div>
+              <div id="no-connection-found">
+                <h1>No connection found</h1>
+                <div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"></path>
+                  </svg>
+                  <h3>Clear connections</h3>
+                </div>
+                <div>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <h3>Create a new connection to a database</h3>
+                </div>
+              </div>
+              <div id="items"></div>
+          </div>
+      </div>
+  
+      <div class="content">
+
+        <div class="modal" id="create-connection-modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Create connection</h3>
+              <button id="close-modal" onclick="closeModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="create-connection">
+                <!-- <input name="customName" type="text" placeholder="Custom name (default: [database name])">
+                <input name="ip" type="text" placeholder="IP (default: 'localhost')" value="gcl-db-do-user-13514107-0.b.db.ondigitalocean.com">
+                <input name="port" type="number" placeholder="Port (default: 3306)" value="25060">
+                <input name="username" type="text" placeholder="Username (default: 'root')" value="doadmin">
+                <input name="password" type="password" placeholder="Password (default: empty)" value="AVNS_c4DhG_xTh0fYZdZy4aU">
+                <input name="database" type="text" placeholder="Database name" value="defaultdb" required> -->
+                <input name="customName" type="text" placeholder="Custom name (default: [database name])">
+                <input name="ip" type="text" placeholder="IP (default: 'localhost')">
+                <input name="port" type="number" placeholder="Port (default: 3306)">
+                <input name="username" type="text" placeholder="Username (default: 'root')">
+                <input name="password" type="password" placeholder="Password (default: empty)">
+                <input name="database" type="text" placeholder="Database name" required>
+                <button name="button" type="submit">
+                  <span>Connect</span> 
+                  <div class="loader hidden"></div>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal" id="generate-mock-modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Generate Mock Data</h3>
+              <button id="close-modal" onclick="closeModalMock()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="mock-data-generator">
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="empty-view">
+          <div id="empty-view-container">
+            <h1>No database is open</h1>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13.5H9m4.06-7.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+              </svg>
+              <h3>Clear view</h3>
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>   
+              <h3>Open the editor (all actions will be on the active database)</h3>
+            </div>
+            <div>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
+              </svg>
+              <h3>Visualize your database as graph</h3>
+            </div>
+          </div>
+          <div id="loading-on-page" class="hidden">
+            <div class="loader"></div>
+            <!-- <h3>Loading...</h3> -->
+          </div>
+
+        </div>
+
+        <div class="page" id="editor-view" style="display: none;">
+
+          <div id="editor-helpbar">
+            <div onclick="genQuery('select')">Select</div>
+            <div onclick="genQuery('insert')">Insert</div>
+            <div onclick="genQuery('update')">Update</div>
+            <div onclick="genQuery('delete')">Delete</div>
+            <div onclick="genQuery('create')">Create</div>
+            <div onclick="genQuery('drop')">Drop</div>
+
+          </div>
+
+          <div id="editor-section">
+            <div class="resizer" id="resizer-editor"></div>
+
+            <div id="editor-wrapper">
+              <div id="random-id" style="padding-top: 10px;"></div>
+            
+              <div id="queries-options-wrapper">
+
+                <div id="queries-options">
+                  <button id="execute" onclick="executeQuery(editor.getValue());displayedRecords=0">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                      <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                    </svg>   
+                    Execute
+                  </button>
+
+                  <div id="code-with-mate-create">
+                    <button id="create-room" >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                      </svg>                                            
+                      Code with mate
+                    </button>
+                    <button id="created-room" onclick="navigator.clipboard.writeText(currentRoom)" class="hidden">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                      </svg>                                          
+                      <span id="room-code-create">
+                        XXXXX
+                      </span>
+                    </button>
+                  </div>
+
+                  <div id="code-with-mate-join">
+                    <button id="join-room">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+                      </svg>                                        
+                      Join to a mate
+                    </button>
+                    <button id="joined-room" onclick="navigator.clipboard.writeText(currentRoom)" class="hidden">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+                      </svg>                                          
+                      <span id="room-code-join">
+                        XXXXX
+                      </span>
+                    </button>
+                  </div>
+
+                  <div id="queries-actions">
+                    <button id="save-query" onclick="saveQuery()">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                      </svg>                      
+                    </button>
+                    <button id="delete-query" onclick="deleteQuery()">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l1.664 1.664M21 21l-1.5-1.5m-5.485-1.242L12 17.25 4.5 21V8.742m.164-4.078a2.15 2.15 0 011.743-1.342 48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185V19.5M4.664 4.664L19.5 19.5" />
+                      </svg>                      
+                    </button>
+                  </div>
+
+                </div>
+                
+                <div id="saved-queries">
+                  <h4>Saved queries</h4>
+                  <div id="saved-queries-list">
+                    <div id="empty-queries-list">
+                      <h4>No query saved</h4>
+                    </div>
+                    <div id="items-queries"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+          <div id="query-results">
+            <table>
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="page" id="graph-view" style="display: none;">
+
+          <div id="activeDBTitle"></div>
+
+          <div id="config-menu">
+            <h3>Config</h3>
+      
+            <div id="configs">
+              <div class="config">
+                <label for="center-force">Center Force:</label
+                ><input
+                  type="range"
+                  id="center-force"
+                  min="0"
+                  max="1.5"
+                  step="0.01"
+                  value="0.2"
+                />
+              </div>
+      
+              <div class="config">
+                <label for="repel-force">Repel Force:</label
+                ><input
+                  type="range"
+                  id="repel-force"
+                  min="0"
+                  max="2000"
+                  step="50"
+                  value="1500"
+                />
+              </div>
+      
+              <div class="config">
+                <label for="link-force">Link Force:</label
+                ><input
+                  type="range"
+                  id="link-force"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value="1"
+                />
+              </div>
+      
+              <div class="config">
+                <label for="link-distance">Link Distance:</label
+                ><input
+                  type="range"
+                  id="link-distance"
+                  min="10"
+                  max="200"
+                  step="5"
+                  value="30"
+                />
+              </div>
+            </div>
+          </div>
+    
+          <svg id="canvas"></svg>
+
+          <div class="zoom-container">
+            <h3 id="zoom">100%</h3>
+            <button class="single" onclick="resetZoom()" title="Reset the zoom">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75l-2.489-2.489m0 0a3.375 3.375 0 10-4.773-4.773 3.375 3.375 0 004.774 4.774zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </button>
+        </div>
+        </div>
+
+      </div>
+    </div>
+
+  </body>
+  
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+  <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+
+  <script>
+    async function loading() {
+      let createConnBtn = document.querySelector("#create-new-connection");
+      let loading = document.querySelector("#loading-on-page");
+      let emptyView = document.querySelector("#empty-view-container");
+      try {
+        createConnBtn.disabled = true;
+        loading.classList.remove("hidden");
+        emptyView.classList.add("hidden");
+        await waitForConnections();
+        createConnBtn.disabled = false;
+        loading.classList.add("hidden");
+        emptyView.classList.remove("hidden");
+        loadConnections();
+      } catch (error) {
+        createConnBtn.disabled = false;
+        loading.classList.add("hidden");
+        emptyView.classList.remove("hidden");
+        console.log(error.message);
+      }
+    }
+  </script>
+
+  <script src="js/themes.js"></script>
+  <script src="js/tabs.js"></script>
+  <script src="js/resizer.js"></script>
+  <script>
+    let socket = null; 
+    let currentRoom = null; 
+    let isUpdatingCode = false; 
+    let currentFakeCursorsDecorations = []; 
+    let userColor = null;
+  </script>
+  <script src="js/socket.js" type="module"></script>
+  <script>require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});</script>
+  <script src="js/editor.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/simulationEvents.js"></script>
+
+</html>
